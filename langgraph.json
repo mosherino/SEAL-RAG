@@ -1,0 +1,14 @@
+{
+    "dockerfile_lines": [],
+    "graphs": {
+     
+      "seal-rag": "./src/workflow_manager.py:build_seal_rag_graph",
+      "self-rag": "./app.py:graph_self_rag"
+      
+    },
+    "env": "./.env",
+    "python_version": "3.11",
+    "dependencies": [
+      "."
+    ]
+}

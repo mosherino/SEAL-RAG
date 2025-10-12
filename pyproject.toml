@@ -1,0 +1,42 @@
+[project]
+name = "seal-rag-iclr"
+version = "0.1.0"
+description = "SEAL-RAG graph and experiments"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+  "python-dotenv>=1.0.0",
+  "typing-extensions>=4.8.0",
+  "pydantic>=2.6.0",
+  "langchain>=0.3.0",
+  "langchain-openai>=0.3.0",
+  "langchain-pinecone>=0.1.0",
+  "langchainhub>=0.1.14",
+  "langgraph>=0.3.0",
+  "openai>=1.40.0",
+  "pinecone>=5.0.0",
+  "tiktoken>=0.7.0",
+  "langgraph-cli[inmem]>=0.4.2",
+]
+
+[project.optional-dependencies]
+notebooks = [
+  "jupyter>=1.0.0",
+  "pandas>=2.2.0",
+  "numpy>=1.26.0",
+  "scipy>=1.11.0",
+  "tqdm>=4.66.0",
+  "matplotlib>=3.8.0",
+]
+gcp = [
+  "google-cloud-bigquery>=3.25.0",
+  "google-cloud-bigquery-storage>=2.25.0",
+  "google-auth>=2.32.0",
+  "google-api-core>=2.19.1",
+  "googleapis-common-protos>=1.63.2",
+]
+
+[tool.uv]
+package = false
+
+
