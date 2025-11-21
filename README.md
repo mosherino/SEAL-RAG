@@ -1,22 +1,28 @@
 # SEAL-RAG
 
-**A multi-hop retrieval-augmented generation system with entity-based reasoning**
+**Loop-Adaptive RAG with On-the-Fly Entity Extraction and Fixed-K Gap Repair**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.3+-green.svg)](https://github.com/langchain-ai/langgraph)
 
-> 🔬 Research paper submitted to ICLR 2025. See [Citation](#citation) for details.
+> 🎓 **Master's Thesis Implementation**
+> Department of Electrical Engineering, Ariel University
 
 ---
 
-## Features
+![SEAL-RAG Architecture](src/files/assets/seal_rag_architecture.png)
 
-- 🔗 **Multi-hop question answering** with entity extraction and repair loops
-- 📊 **Configurable retrieval** (Pinecone vector store + OpenAI embeddings)
-- 🎨 **Interactive UI** via LangGraph Studio or programmatic Python API
-- 📈 **Reproducible experiments** with included notebooks and evaluation pipelines
-- ⚙️ **Flexible configuration** (models, retrieval settings, temperature)
+## Overview
+
+SEAL-RAG is a training-free controller for Retrieval-Augmented Generation that targets **precision at small k** under predictable budgets. Unlike methods that broaden context (increasing cost and noise), SEAL-RAG actively **repairs** missing evidence by replacing low-utility passages with targeted micro-queries.
+
+### Key Features
+- 🔄 **Loop-Adaptive Control:** `Search` → `Extract` → `Assess` → `Loop` cycle.
+- 🎯 **Entity-Anchored Repair:** On-the-fly extraction of missing entities and relations.
+- ⚖️ **Fixed-K Replacement:** Maintains a constant context size (e.g., k=3) to ensure predictable latency.
+- 📊 **Reproducible Benchmarks:** Full evaluation pipeline for HotpotQA and FEVER.
+- 🛠️ **Modern Stack:** Built with LangGraph, Pinecone, and OpenAI.
 
 ---
 
@@ -24,8 +30,8 @@
 
 **Prerequisites:** 
 - Python 3.11+
-- OpenAI API key (for LLM and embeddings)
-- **Vector store with documents** (default: Pinecone; extensible to any LangChain-compatible store)
+- OpenAI API key
+- Pinecone API key
 
 ### 1. Install dependencies
 
@@ -39,128 +45,91 @@ uv sync
 ```bash
 cp env.example .env
 # Edit .env and add your API keys:
-# OPENAI_API_KEY=your_key_here
-# PINECONE_API_KEY=your_key_here
+# OPENAI_API_KEY=sk-...
+# PINECONE_API_KEY=...
 ```
 
-> ⚠️ **Important:** SEAL-RAG requires a vector store with indexed documents for retrieval.
-> - **Default:** Pinecone (set `PINECONE_API_KEY` and configure `pinecone_index_name`)
-> - **Custom:** Modify `src/modules/configuration.py` to use another LangChain vector store (Chroma, Weaviate, etc.)
-> 
-> See [Indexing](#notebooks) to build a Pinecone index, or configure an existing one.
+### 3. Data & Indexing (Crucial for Reproducibility)
 
-### 3. Run the graph
+To reproduce the thesis results, you must use the specific 1,000-question validation slice and the Wikipedia snapshot used in our experiments.
+- **Verify Data:** Ensure `data/hotpot_1k.jsonl` exists in the repository.
+- **Build Index:** Run the indexing notebook to populate your vector store.
+
+```bash
+uv run jupyter notebook indexing.ipynb
+```
+
+### 4. Run the graph
 
 **Option A: Interactive UI (LangGraph Studio)**
+
 ```bash
 uv run langgraph dev
 # Open http://localhost:2024 in your browser
 ```
 
 **Option B: Python API**
+
 ```python
 from src.workflow_manager import build_seal_rag_graph
 
 graph = build_seal_rag_graph()
-result = graph.invoke({"user_query": "Your question here"})
+result = graph.invoke({"user_query": "Which city hosted the Olympic Games in the same year that the band Blur released the album Parklife?"})
 print(result["final_answer"])
 ```
 
 ---
 
-## Usage
+## Experiments & Reproduction
 
-### LangGraph Studio (Interactive UI)
-
-Start the development server:
-
-```bash
-uv run langgraph dev
-```
-
-In the UI:
-1. Select the `seal-rag` graph
-2. Provide an input with `user_query`
-3. Configure settings (optional): `retriever_k`, `pinecone_index_name`, `temperature`
-
-### Python API
-
-```python
-from src.workflow_manager import build_seal_rag_graph
-
-# Build the graph
-graph = build_seal_rag_graph()
-
-# Run with defaults
-result_state = graph.invoke({
-    "user_query": "What is the key contribution of the referenced method?"
-})
-print(result_state.get("final_answer"))
-
-# Run with custom configuration
-custom_config = {
-    "configurable": {
-        "retriever_k": 1,
-        "pinecone_index_name": "<your_pinecone_index_name>",
-        "temperature": 0.0,
-        "model": "openai:gpt-4o"
-    }
-}
-result_state = graph.invoke({"user_query": "..."}, config=custom_config)
-```
+We provide the exact scripts used to generate the results in the thesis.
 
 ### Notebooks
 
-All notebooks auto-read the `.env` file. Run with:
+| Notebook | Description |
+| :--- | :--- |
+| `indexing.ipynb` | **Setup:** Builds the Pinecone index from the corpus. |
+| `experiment.ipynb` | **Evaluation:** Runs the full pipeline (SEAL vs Baselines) over the dataset. |
+| `statistical_confidence.ipynb` | **Analysis:** Performs McNemar's tests and Paired t-tests on the results. |
+
+### Running from CLI
+
+You can also run experiments via the command line:
 
 ```bash
-uv sync --extra notebooks
-uv run jupyter notebook
+# Run SEAL-RAG on the 1k slice with k=3 and loop budget=3
+bash scripts/run_main.sh \
+  --model gpt-4o \
+  --k 3 --L 3 \
+  --config ./configs/default.yaml \
+  --slice ./data/hotpot_1k.jsonl \
+  --out ./runs/reproduction_run
 ```
-
-**Available notebooks:**
-
-| Notebook | Path | Purpose |
-|----------|------|---------|
-| **Indexing** | `indexing.ipynb` | **Required first step:** Build/update the Pinecone index with your document corpus |
-| **Experiments** | `experiment.ipynb` | Run evaluation pipeline over questions and generate CSVs |
-| **Statistics** | `src/files/experiment_comarison/statistical_confidence.ipynb` | Aggregate results and compute confidence intervals |
 
 ---
 
 ## Configuration
 
-The graph exposes configurable parameters via LangGraph's `configurable` interface. Override them at runtime:
+The graph parameters can be adjusted at runtime via `configurable`:
 
-| Parameter | Default | Options | Description |
-|-----------|---------|---------|-------------|
-| `model` | `openai:gpt-4o` | `openai:gpt-4o`, `openai:gpt-4o-mini`, `openai:gpt-4.1`, `openai:gpt-4.1-mini`, `openai:gpt-3.5-turbo` | Chat model provider/version |
-| `temperature` | `0.0` | `0.0–1.0` | Sampling temperature (lower = more deterministic) |
-| `extraction_temperature` | `0.2` | `0.0–1.0` | Temperature for entity extraction |
-| `retriever_k` | `1` | `1–7` | Number of documents to retrieve per call |
-| `embed_model` | `text-embedding-3-small` | `text-embedding-3-small`, `text-embedding-3-large`, `text-embedding-ada-002` | OpenAI embedding model |
-| `pinecone_index_name` | `seal-v3-hard` | Any valid index | Target Pinecone index for retrieval |
-| `pinecone_namespace` | `None` | Any string or `None` | Optional namespace scoping |
-| `repair_loop_limit` | `5` | `0–50` | Max micro-query iterations before forcing answer |
+| Parameter | Default | Description |
+| :--- | :--- | :--- |
+| `model` | `openai:gpt-4o` | LLM backbone (supports 4o, 4o-mini, 4.1) |
+| `retriever_k` | `1` | Fixed number of documents to maintain in context |
+| `repair_loop_limit` | `3` | Maximum number of repair iterations (L) |
+| `pinecone_index_name` | `seal-v3-hard` | Target vector store index |
 
 **Full configuration reference:** [`src/modules/configuration.py`](src/modules/configuration.py)
 
 ---
 
-## Results
+## Results Data
 
-Experimental results (CSVs) are included in this repository:
+Raw experimental results (CSVs) from the thesis are included for verification in `src/files/experiment_comparison/`:
 
-```
-src/files/
-├── experiment_comarison/
-│   ├── k_1/                    # Experiments with retriever_k=1
-│   │   └── seal_k_1_model_*.csv
-│   └── k_3/                    # Experiments with retriever_k=3
-│       └── seal_k_3_model_*.csv
-└── ablations/                  # Ablation study results
-    └── Seal-RAG-Ablations_*.csv
-```
+- 📂 k=1 Experiments (`seal_k_1_model_*.csv`)
+- 📂 k=3 Experiments (`seal_k_3_model_*.csv`)
+- 📂 Ablation Studies
 
 ---
 
@@ -169,91 +138,34 @@ src/files/
 ```
 .
 ├── src/
-│   ├── modules/
-│   │   ├── agents/            # Agent nodes (retrieve, repair, rank, generate)
-│   │   └── configuration.py   # Configurable parameters
-│   ├── other_rags/            # Baseline implementations (e.g., self-rag)
-│   ├── states.py              # State schema
-│   └── workflow_manager.py    # LangGraph graph builder
-├── app.py                     # Graph entrypoint
-├── indexing.ipynb             # Index building notebook
-├── experiment.ipynb           # Evaluation pipeline
-├── statistical_confidence.ipynb
-├── langgraph.json             # LangGraph Studio config
-├── pyproject.toml             # Dependencies (uv)
+│   ├── files/             # Experimental results & assets
+│   ├── modules/           # Core logic (Extraction, Ranking, Gate)
+│   ├── other_rags/        # Baseline implementations (Self-RAG, CRAG, Basic)
+│   └── workflow_manager.py # LangGraph construction
+├── data/                  # Seeded datasets (HotpotQA 1k slice)
+├── experiment.ipynb       # Main evaluation notebook
+├── statistical_confidence.ipynb # Statistical analysis notebook
 └── README.md
 ```
 
 ---
 
-## FAQ
+## Citation
 
-### Which API keys are required?
+If you use this code or data in your research, please cite the thesis:
 
-- **Required:** `OPENAI_API_KEY`, `PINECONE_API_KEY`
-- **Optional:** `LANGCHAIN_API_KEY` (for LangSmith tracing/logging)
-
-### Can I run this without a vector store?
-
-No. SEAL-RAG requires a populated vector store for document retrieval. You must either:
-1. Use Pinecone: run `indexing.ipynb` to build an index, or point to an existing one via `pinecone_index_name`
-2. Use another vector store: modify `src/modules/configuration.py` to integrate any LangChain-compatible store (Chroma, Weaviate, FAISS, etc.)
-
-### Can I use a vector store other than Pinecone?
-
-Yes. Pinecone is the default, but you can extend `src/modules/configuration.py` to support any LangChain vector store:
-1. Update the `build_retriever()` method to initialize your chosen store
-2. Add any necessary configuration parameters (e.g., `chroma_collection_name`)
-3. Install the required package (e.g., `uv add langchain-chroma`)
-
-See [LangChain's VectorStore docs](https://python.langchain.com/docs/integrations/vectorstores/) for supported options.
-
-### How do I install without activating a venv?
-
-Use `uv` for everything:
-```bash
-uv python install 3.11
-uv sync
-uv run langgraph dev
+```bibtex
+@mastersthesis{lahmy2025sealrag,
+  title={SEAL-RAG: Loop-Adaptive RAG with On-the-Fly Entity Extraction and Fixed-K Gap Repair},
+  author={Lahmy, Moshe},
+  school={Ariel University},
+  year={2025},
+  type={Master's Thesis}
+}
 ```
-
-### How do I export a requirements.txt for pip users?
-
-```bash
-uv export --format requirements-txt > requirements.txt
-```
-
----
-
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ---
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Citation
-
-If you use SEAL-RAG in your research, please cite:
-
-```bibtex
-@misc{seal-rag-2025,
-  title={SEAL-RAG: Entity-Driven Multi-Hop Retrieval-Augmented Generation},
-  author={[Authors]},
-  year={2025},
-  note={Submitted to ICLR 2025}
-}
-```
-
-*(BibTeX will be updated upon acceptance)*
