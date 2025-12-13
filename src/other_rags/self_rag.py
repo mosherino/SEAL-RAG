@@ -21,7 +21,7 @@ class GradeDocuments(BaseModel):
 
 
 # LLM with function call
-llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 structured_llm_grader = llm.with_structured_output(GradeDocuments)
 
 # Prompt
@@ -39,8 +39,8 @@ grade_prompt = ChatPromptTemplate.from_messages(
 retrieval_grader = grade_prompt | structured_llm_grader
 question = "agent memory"
 
-vector_store = PineconeVectorStore(index_name="seal-v3-hard", embedding=OpenAIEmbeddings(model="text-embedding-3-small"))
-retriever = vector_store.as_retriever(search_kwargs={"k": 1})#search_kwargs={"k": 3}
+vector_store = PineconeVectorStore(index_name="seal-2wiki-v1", embedding=OpenAIEmbeddings(model="text-embedding-3-small"))
+retriever = vector_store.as_retriever(search_kwargs={"k": 5})#search_kwargs={"k": 3}
 
 
 ### Generate
@@ -76,7 +76,7 @@ Answer:""")
 ])
 
 # LLM
-llm = ChatOpenAI(model_name="gpt-4.1-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 
 # Post-processing
@@ -102,7 +102,7 @@ class GradeHallucinations(BaseModel):
 
 
 # LLM with function call
-llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 structured_llm_grader = llm.with_structured_output(GradeHallucinations)
 
 # Prompt
@@ -131,7 +131,7 @@ class GradeAnswer(BaseModel):
 
 
 # LLM with function call
-llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 structured_llm_grader = llm.with_structured_output(GradeAnswer)
 
 # Prompt
@@ -150,7 +150,7 @@ answer_grader = answer_prompt | structured_llm_grader
 ### Question Re-writer
 
 # LLM
-llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 # Prompt
 system = """You a question re-writer that converts an input question to a better version that is optimized \n 
@@ -243,7 +243,7 @@ def generate(state):
 
     
     # LLM
-    llm_generator = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+    llm_generator = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
     # Prompt
     system = """You are an assistant for question-answering tasks. 
@@ -258,7 +258,8 @@ def generate(state):
     # Extract text from documents
     relevance_context = format_docs(documents)
     last_retrieved = state.get("last_retrieved_documents", [])
-    general_context = format_docs(last_retrieved)
+    last_retrieved_context = format_docs(last_retrieved)
+    
     # Prompt with labeled sections
     re_write_prompt = ChatPromptTemplate.from_messages(
         [
@@ -266,7 +267,8 @@ def generate(state):
             (
                 "human",
                 "Here is the initial question:\n\n{question}\n\n"
-                "Relevance Context:\n\n{relevance_context}\n\n"
+                "Relevance Context (Graded as Relevant):\n{relevance_context}\n\n"
+                "Last Retrieved Context (All Candidates):\n{last_retrieved_context}\n\n"
                 "Answer the question (maximum 2-4 words)."
             ),
         ]
@@ -278,6 +280,7 @@ def generate(state):
     generation = generate_chain.invoke({
         "question": question,
         "relevance_context": relevance_context,
+        "last_retrieved_context": last_retrieved_context,
     })
     
     return {

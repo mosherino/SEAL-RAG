@@ -3,7 +3,8 @@
     "graphs": {
      
       "seal-rag": "./src/workflow_manager.py:build_seal_rag_graph",
-      "self-rag": "./app.py:graph_self_rag"
+      "self-rag": "./app.py:graph_self_rag",
+      "adaptive-rag": "./src/other_rags/adaptive_rag.py:get_adaptive_rag_graph"
       
     },
     "env": "./.env",

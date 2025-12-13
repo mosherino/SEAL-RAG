@@ -54,7 +54,7 @@ class Configuration(BaseModel):
         int,
         {"__template_metadata__": {"kind": "number", "min": 1, "max": 7}}
     ] = Field(
-        default=1,
+        default=5,
         description="The number of documents to retrieve from the vector store. Value between 1 and 7."
     )
 
@@ -84,15 +84,12 @@ class Configuration(BaseModel):
 
     pinecone_index_name: Annotated[
         Literal[
-            "marag-v1",
-            "marag-v1-large",
-            "marag-v1-ada-002",
-            "seal-v2-hard",
-            "seal-v3-hard"
+            "seal-v3-hard",
+            "seal-2wiki-v1" 
         ],
         {"__template_metadata__": {"kind": "select"}},
     ] = Field(
-        default="seal-v3-hard",
+        default="seal-2wiki-v1",
         description="Pinecone index name to use for retrieval.",
     )
 
@@ -109,7 +106,7 @@ class Configuration(BaseModel):
         int,
         {"__template_metadata__": {"kind": "number", "min": 0, "max": 50}},
     ] = Field(
-        default=5,
+        default=1,
         description="Maximum number of micro-query iterations before forcing repair/answer.",
     )
 
