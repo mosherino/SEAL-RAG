@@ -6,6 +6,8 @@ from src.modules.configuration import Configuration
 from langchain_core.runnables import RunnableConfig
 from langchain_core.documents import Document
 
+import asyncio
+
 
 def get_document_title(document: Document) -> str:
     """Return a stable title key for a Document.
@@ -57,8 +59,11 @@ async def retrieve_docs(state: State, config: RunnableConfig) -> State:
     configuration = Configuration(**configurable)
     # Build the retriever
     user_query = state.get("micro_query") or state["user_query"]
-    # Use the Configuration instance to build retriever
-    retriever = configuration.build_retriever()
+    
+    # Run the synchronous builder in a separate thread to avoid blocking the loop
+    
+    retriever = await asyncio.to_thread(configuration.build_retriever)
+    
     # Retrieval
     new_docs: list[Document] = await retriever.ainvoke(user_query) or []
 
