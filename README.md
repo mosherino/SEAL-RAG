@@ -1,13 +1,12 @@
 # SEAL-RAG
 
-**Loop-Adaptive RAG with On-the-Fly Entity Extraction and Fixed-K Gap Repair**
+**Replace, Don't Expand: Mitigating Context Dilution in Multi-Hop RAG via Fixed-Budget Evidence Assembly**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.3+-green.svg)](https://github.com/langchain-ai/langgraph)
 
-> 🎓 **Master's Thesis Implementation**
-> Department of Electrical Engineering, Ariel University
+> 📄 [Paper (arXiv)](https://arxiv.org/abs/2512.10787) | [HuggingFace Papers](https://huggingface.co/papers/2512.10787)
 
 ---
 
@@ -25,7 +24,7 @@ SEAL-RAG is a training-free controller for Retrieval-Augmented Generation that t
 - 🛠️ **Modern Stack:** Built with LangGraph, Pinecone, and OpenAI.
 
 ---
-
+ 
 ## Quick Start
 
 **Prerequisites:** 
@@ -51,7 +50,7 @@ cp env.example .env
 
 ### 3. Data & Indexing (Crucial for Reproducibility)
 
-To reproduce the thesis results, you must use the specific 1,000-question validation slice and the Wikipedia snapshot used in our experiments.
+To reproduce our results, you must use the specific 1,000-question validation slice and the Wikipedia snapshot used in our experiments.
 - **Verify Data:** Ensure `data/hotpot_1k.jsonl` exists in the repository.
 - **Build Index:** Run the indexing notebook to populate your vector store.
 
@@ -82,7 +81,7 @@ print(result["final_answer"])
 
 ## Experiments & Reproduction
 
-We provide the exact scripts used to generate the results in the thesis.
+We provide the exact scripts used to generate the results in the paper.
 
 ### Notebooks
 
@@ -125,7 +124,7 @@ The graph parameters can be adjusted at runtime via `configurable`:
 
 ## Results Data
 
-Raw experimental results (CSVs) from the thesis are included for verification in `src/files/experiment_comparison/`:
+Raw experimental results (CSVs) are included for verification in `src/files/experiment_comparison/`:
 
 - 📂 k=1 Experiments (`seal_k_1_model_*.csv`)
 - 📂 k=3 Experiments (`seal_k_3_model_*.csv`)
@@ -152,15 +151,14 @@ Raw experimental results (CSVs) from the thesis are included for verification in
 
 ## Citation
 
-If you use this code or data in your research, please cite the thesis:
+If you use this code or data in your research, please cite:
 
 ```bibtex
-@mastersthesis{lahmy2025sealrag,
-  title={SEAL-RAG: Loop-Adaptive RAG with On-the-Fly Entity Extraction and Fixed-K Gap Repair},
-  author={Lahmy, Moshe},
-  school={Ariel University},
-  year={2025},
-  type={Master's Thesis}
+@article{sealrag2025,
+  title={Replace, Don't Expand: Mitigating Context Dilution in Multi-Hop RAG via Fixed-Budget Evidence Assembly},
+  author={Lahmy, Moshe and Yozevitch, Roi},
+  journal={arXiv preprint arXiv:2512.10787},
+  year={2025}
 }
 ```
 
