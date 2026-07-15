@@ -151,14 +151,26 @@ Raw experimental results (CSVs) are included for verification in `src/files/expe
 
 ## Citation
 
-If you use this code or data in your research, please cite:
+If you use this code or data in your research, please cite our paper:
 
 ```bibtex
-@article{sealrag2025,
-  title={Replace, Don't Expand: Mitigating Context Dilution in Multi-Hop RAG via Fixed-Budget Evidence Assembly},
-  author={Lahmy, Moshe and Yozevitch, Roi},
-  journal={arXiv preprint arXiv:2512.10787},
-  year={2025}
+@inproceedings{lahmy2026sealrag,
+  title     = {Taking RAG Systems to the Next Level: Reasoning That Doesn't Blow Up Your Context},
+  author    = {Lahmy, Moshe and Yozevitch, Roi},
+  booktitle = {2026 IEEE Swiss Conference on Data Science (SDS)},
+  year      = {2026},
+  publisher = {IEEE}
+}
+```
+
+An extended version with additional analyses and full experimental details is available on arXiv:
+
+```bibtex
+@article{lahmy2025replace,
+  title   = {Replace, Don't Expand: Mitigating Context Dilution in Multi-Hop RAG via Fixed-Budget Evidence Assembly},
+  author  = {Lahmy, Moshe and Yozevitch, Roi},
+  journal = {arXiv preprint arXiv:2512.10787},
+  year    = {2025}
 }
 ```
 
